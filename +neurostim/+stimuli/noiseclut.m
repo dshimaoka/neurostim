@@ -229,6 +229,9 @@ classdef (Abstract) noiseclut < neurostim.stimuli.clutImage
                 %anything. That said, everything should work fine as long
                 %as their function does not depend on any other property
                 %values that changed throughout the experiment.
+                if ~iscell(o.sampleFun)
+                    o.sampleFun = {o.sampleFun};
+                end
                 if any(cellfun(@(x) isa(x,'function_handle'),o.sampleFun))
                     if ~warned
                         warning('This stimulus used a user-defined function to set the luminance/color of the randels. The reconstruction might fail if your custom function calls upon any Neurostim parameters other than o.nRandels and o.ixImage). We really have no way to know what you did!');
@@ -273,8 +276,15 @@ classdef (Abstract) noiseclut < neurostim.stimuli.clutImage
             frDr = get(o.cic.prms.frameDrop,'trial',p.trial,'struct',true);
             framesWereDropped = ~iscell(frDr.data);
             if framesWereDropped
-                stay = ~isnan(frDr.data(:,1)); %frameDrop initialises to NaN
-                frDr = structfun(@(x) x(stay,:),frDr,'unif',false);
+                %stay = ~isnan(frDr.data(:,1)); %frameDrop initialises to NaN
+                %frDr = structfun(@(x) x(stay,:),frDr,'unif',false);
+                stay = find(~isnan(frDr.data(:,1))); %frameDrop initialises to NaN
+                frDr.data = frDr.data(stay,:);
+                frDr.trial = frDr.trial(stay);
+                frDr.trialTime = frDr.trialTime(stay);
+                frDr.time = frDr.time(stay);
+                frDr.block = frDr.block(stay);
+                frDr.frame = frDr.frame(stay);
                 
                 %Convert duration of frame drop from ms to frames (this assumes frames were synced?)
                 frDr.data(:,2) = o.cic.ms2frames(1000*frDr.data(:,2));
