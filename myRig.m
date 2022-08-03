@@ -63,7 +63,7 @@ end
 
 %% Settings that vary per machine
 switch upper(computerName)
-    case 'EXPERIMENTRIG'
+    case {'EXPERIMENTRIG','MU00175834'}
         % An example experimental rig called 'experimentrig'
         c.screen.number     = 2; % Use the second screen as the display for the subject
         c.screen.frameRate  = 120;
