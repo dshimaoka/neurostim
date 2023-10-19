@@ -43,7 +43,7 @@ classdef movie < neurostim.stimulus
      properties (GetAccess = public, SetAccess = private)
         fracFrameCntr;      % Current fractional frame cntr.
     end
-    
+     %
     methods (Access = public)
         function o = movie(c,name)
             o = o@neurostim.stimulus(c,name);
