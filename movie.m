@@ -199,6 +199,9 @@ classdef movie < neurostim.stimulus
             if isempty(p.moviePath)
                 file = filename;
             else
+            if ~ispc
+                filename = replace(filename, '\','/');
+            end
                 [~,filename_p,filename_s] = fileparts(filename);
                 filename = [filename_p filename_s];
                 file = fullfile(p.moviePath,filename);
