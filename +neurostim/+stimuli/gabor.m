@@ -49,6 +49,9 @@ classdef gabor < neurostim.stimulus
         shader;
         textureRect;
         flickerPhase=0; % frame-by-frame , current phase: not logged explicitly
+        %spatialPhase=0; % frame-by-frame , current phase: not logged explicitly
+    end
+    properties (SetAccess=private)
         spatialPhase=0; % frame-by-frame , current phase: not logged explicitly
     end
    
