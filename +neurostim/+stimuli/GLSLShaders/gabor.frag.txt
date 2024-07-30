@@ -121,7 +121,7 @@ void main()
         tev =1.0;
     }
 
-    factor =  1.0 +contrast * ev * sv * tev;
+    factor =  1.0*ev +contrast * ev * sv * tev;
     if (colorMode==1 || colorMode==3 || colorMode==4){
         /*  RGB, LUM or LINLUT */
         gl_FragColor[0] = color[0] * factor;
