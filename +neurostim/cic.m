@@ -2089,7 +2089,7 @@ classdef cic < neurostim.plugin
             PsychColorCorrection('SetColorClampingRange',c.mainWindow,0,1); % Final pixel value is between [0 1]
 
             %% Perform additional setup routines
-            Screen(c.mainWindow,'BlendFunction',GL_ONE, GL_ONE);%GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            Screen(c.mainWindow,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);%GL_ONE, GL_ONE);%GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             assignWindow(c.pluginOrder); % Tell the plugins about this window
         end
 
