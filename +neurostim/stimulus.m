@@ -267,7 +267,6 @@ classdef stimulus < neurostim.plugin
             %If at the start of a new element, move the design to the
             % next "trial"
 
-            disp(['updateRSVP: ' num2str([s.n_ori_repeats s.n_ori_repeats_completed])]);
             
             if itemFrame==0  % First of an item
                 ok = beforeTrial(s.rsvp.design);
