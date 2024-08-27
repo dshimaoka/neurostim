@@ -148,9 +148,9 @@ classdef eScript < neurostim.plugin
                 o.afterExperimentFun(o.cic);
             end
         end
-        function keyboard(o,key,time)
+        function keyboard(o,key)%,time)
             if ~isempty(o.keyFun)
-               o.keyFun(o,key,time);
+               o.keyFun(o,key)%,time);
             end
         end
         
