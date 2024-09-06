@@ -72,7 +72,8 @@ classdef eyelink < neurostim.plugins.eyetracker
         getSamples =true;
         getEvents =false;
         nTransferAttempts = 5;
-        
+        eyeNr=NaN; % Index variable for eye position
+
         callbackFun = 'neurostimEyelinkDispatchCallback'; % Modified callback for overlay use on VPIXX and PsychPortAudio for sounds
         boostEyeImage = 0;  % Factor by which to boost the eye image on a LUM calibrated display. [Default 0 means not boosted. Try values above 1.]
         targetWindow;       % If an overlay is present, calibration targets can be drawn to it. This will be set automatically.            
@@ -86,7 +87,7 @@ classdef eyelink < neurostim.plugins.eyetracker
         isRecording;
         isConnected; %double
     end
-    
+
     methods
         function v = get.isRecording(~)
             v = Eyelink('CheckRecording');%returns 0 if connected.
@@ -191,19 +192,27 @@ classdef eyelink < neurostim.plugins.eyetracker
             % open file to record data to (will be renamed on copy)
             Eyelink('Openfile', o.edfFileRemote);
             
-            switch upper(o.eye)
-                case 'LEFT'
-                    Eyelink('Command','binocular_enabled=NO');
-                    Eyelink('Command','active_eye=LEFT');
-                    Eyelink('Message','%s', 'EYE_USED 0');
-                case 'RIGHT'
-                    Eyelink('Command','binocular_enabled=NO');
-                    Eyelink('Command','active_eye=RIGHT');
-                    Eyelink('Message','%s', 'EYE_USED 1');
-                case {'BOTH','BINOCULAR'}
-                    Eyelink('Command','binocular_enabled=YES');
-                    Eyelink('Command','active_eye=LEFT,RIGHT');
-                    Eyelink('Message','%s', 'EYE_USED 2');
+            if ~strcmpi(o.eye,'LEFT') && ~strcmpi(o.eye,'RIGHT')
+                c.error('STOPEXPERIMENT','The .eye parameter should only be set to "LEFT" or "RIGHT".');
+            end
+
+            if ~o.binocular
+                % If binocular is true, o.eye is the eye neurostim uses for
+                % behaviour
+                switch upper(o.eye)
+                    case 'LEFT'
+                        Eyelink('Command','binocular_enabled=NO');
+                        Eyelink('Command','active_eye=LEFT');
+                        Eyelink('Message','%s', 'EYE_USED 0');
+                    case 'RIGHT'
+                        Eyelink('Command','binocular_enabled=NO');
+                        Eyelink('Command','active_eye=RIGHT');
+                        Eyelink('Message','%s', 'EYE_USED 1');                       
+                end
+            else % Binocular tracking is enabled
+                Eyelink('Command','binocular_enabled=YES');
+                Eyelink('Command','active_eye=LEFT,RIGHT');
+                Eyelink('Message','%s', 'EYE_USED 2');
             end
                 
             if o.useRawData
@@ -224,8 +233,7 @@ classdef eyelink < neurostim.plugins.eyetracker
             
             Eyelink('Message','DISPLAY_COORDS %d %d %d %d',o.cic.screen.xorigin, o.cic.screen.yorigin, o.cic.screen.xpixels,o.cic.screen.ypixels);
             Eyelink('Message','%s',['DISPLAY_SIZE ' num2str(o.cic.screen.width) ' ' num2str(o.cic.screen.height)]);
-            Eyelink('Message','%s', ['FRAMERATE ' num2str(o.cic.screen.frameRate) ' Hz.']);
-            
+            Eyelink('Message','%s', ['FRAMERATE ' num2str(o.cic.screen.frameRate) ' Hz.']);            
         end
         
         
@@ -295,6 +303,13 @@ classdef eyelink < neurostim.plugins.eyetracker
             
             o.writeToFeed('Transfering data from Eyelink host, please wait.');
             Eyelink('StopRecording');
+            
+            % code added to solve data transfer issue
+            Eyelink('SetOfflineMode'); % Put tracker in idle/offline mode
+            Eyelink('Command','clear_screen 0') % Clear Host PC backdrop graphics at the end of the experiment
+            WaitSecs(1); % Allow some time before closing and transferring file
+            % 
+            
             Eyelink('CloseFile');
             pause(0.1);
             if o.transferFile
@@ -368,10 +383,24 @@ classdef eyelink < neurostim.plugins.eyetracker
                     % No eye
                     o.cic.error('STOPEXPERIMENT','eye not available')
                 else
-                    o.eye = eye2str(o,available);
+                    eye = eye2str(o,available);                    
+                end
+                if strcmp(eye,'BOTH')
+                    % binocular eye data available
+                    if ~o.binocular
+                        % Binocular tracking active but not requested
+                        c.error('STOPEXPERIMENT','Eyelink is tracking both eyes but ''.binocular'' is false. To enable binocular tracking ''.binocular'' should be true.');
+                    end
+                else
+                    % If not binocular, use whichever eye eyelink is
+                    % tracking
+                    o.eye = eye;
                 end
             end
-            
+
+            % get the tracked eye for behavior in physical coordinates
+            o.eyeNr = str2eye(o,o.eye);            
+
             Eyelink('Command','record_status_message %s%s%s',o.cic.paradigm, '_TRIAL:',num2str(o.cic.trial));
             Eyelink('Message','%s',['TR:' num2str(o.cic.trial)]);   %will this be used to align clocks later?
             Eyelink('Message','TRIALID %d-%d',o.cic.condition,o.cic.trial);
@@ -393,19 +422,16 @@ classdef eyelink < neurostim.plugins.eyetracker
                     % No sample or other error, just continue to next
                     % frame
                 else
-                    % convert to physical coordinates
-                    eyeNr = str2eye(o,o.eye);
-
                     if o.loc_useRawData
                       % get raw camera (x,y) of pupil center and apply o.clbMatrix (see @eyetracker)
-                      [o.x,o.y] = o.raw2ns(sample.px(eyeNr+1),sample.py(eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
+                      [o.x,o.y] = o.raw2ns(sample.px(o.eyeNr+1),sample.py(o.eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
                     else
                       % get gaze position (in display pixels)
-                      [o.x,o.y] = o.raw2ns(sample.gx(eyeNr+1),sample.gy(eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
+                      [o.x,o.y] = o.raw2ns(sample.gx(o.eyeNr+1),sample.gy(o.eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
                     end
                                         
-                    o.pupilSize = sample.pa(eyeNr+1);
-                    o.valid  = any(sample.gx(eyeNr+1)~=o.el.MISSING_DATA); % Blink or other missing data.
+                    o.pupilSize = sample.pa(o.eyeNr+1);
+                    o.valid  = any(sample.gx(o.eyeNr+1)~=o.el.MISSING_DATA); % Blink or other missing data.
                 end
             end
             if o.getEvents
