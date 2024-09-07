@@ -39,7 +39,7 @@ g.on                =  '@fixation.startTime.FIXATING +250'; % Start showing 250 
 stream =design('ori');           % Define a factorial with one factor
 stream.fac1.grating.orientation = 0:30:359; % Assign orientations
 stream.randomization = 'RANDOMWITHOUTREPLACEMENT'; % Randomize
-g.addRSVP(stream,'duration',5*1000/c.screen.frameRate,'isi',2*1000/c.screen.frameRate); % Tell the stimulus that it should run this stream (in every trial). 5 frames on 2 frames off.
+g.addRSVP(stream,'duration',5*1000/c.screen.frameRate,'isi',2*1000/c.screen.frameRate, 'log',true); % Tell the stimulus that it should run this stream (in every trial). 5 frames on 2 frames off.
 
 % Alternatively, you may want to stream gratings with both orientation and
 % contrast varied.

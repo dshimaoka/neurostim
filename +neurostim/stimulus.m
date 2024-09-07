@@ -285,7 +285,7 @@ classdef stimulus < neurostim.plugin
             if s.rsvp.log
                 if itemFrame == 0
                     s.rsvpIsi = false;
-                elseif itemFrame==startIsiFrame
+                else
                     s.rsvpIsi = true;
                 end
             end
