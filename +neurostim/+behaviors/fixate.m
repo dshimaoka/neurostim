@@ -98,8 +98,8 @@ classdef fixate  < neurostim.behaviors.eyeMovement
                 % OK stay in fixating state
             elseif ~inside
                 if o.duration < o.grace
-                    remove(o.iStartTime,o.stateName); % clear FIXATING startTime
-                    transition(o,@o.freeViewing,e); % return to FREEVIEWING, no penalty
+                    %TEST %remove(o.iStartTime,o.stateName); % clear FIXATING startTime
+                    %TEST %transition(o,@o.freeViewing,e); % return to FREEVIEWING, no penalty
                 else
                     transition(o,@o.fail,e);
                 end
