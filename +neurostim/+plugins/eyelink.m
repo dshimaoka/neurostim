@@ -425,13 +425,14 @@ classdef eyelink < neurostim.plugins.eyetracker
                     if o.loc_useRawData
                       % get raw camera (x,y) of pupil center and apply o.clbMatrix (see @eyetracker)
                       [o.x,o.y] = o.raw2ns(sample.px(o.eyeNr+1),sample.py(o.eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
+                      o.valid  = any(sample.px(o.eyeNr+1)~=o.el.MISSING_DATA); % Blink or other missing data.
                     else
                       % get gaze position (in display pixels)
                       [o.x,o.y] = o.raw2ns(sample.gx(o.eyeNr+1),sample.gy(o.eyeNr+1)); % eyeNr+1, since we're indexing a MATLAB array
+                      o.valid  = any(sample.gx(o.eyeNr+1)~=o.el.MISSING_DATA); % Blink or other missing data.
                     end
                                         
                     o.pupilSize = sample.pa(o.eyeNr+1);
-                    o.valid  = any(sample.gx(o.eyeNr+1)~=o.el.MISSING_DATA); % Blink or other missing data.
                 end
             end
             if o.getEvents
