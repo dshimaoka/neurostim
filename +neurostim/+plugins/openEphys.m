@@ -105,7 +105,10 @@ classdef openEphys < neurostim.plugins.ePhys
             request = sprintf('StartRecord CreateNewDir=%i RecDir=%s PrependText=%s AppendText=%s', ...
                 o.createNewDir, o.recDir, o.prependText, o.appendText);
                                                                                                        
-            sendMessage(o,request); % Issue command to start recording            
+            pause(5);
+            sendMessage(o,request); % Issue command to start recording        
+            pause(1);
+            sendMessage(o,request); % Issue command to start recording...again           
         end 
         
         function stopRecording(o) 
